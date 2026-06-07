@@ -16,7 +16,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ── Serve frontend static files ────────────────────────────
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Works both locally (../frontend) and on Railway (/app/frontend)
+const frontendPath = path.join(__dirname, '..', 'frontend');
+app.use(express.static(frontendPath));
 
 // ── API Routes ─────────────────────────────────────────────
 app.use('/api/auth',     require('./routes/auth'));
@@ -31,13 +33,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // ── Catch-all: serve frontend SPA ─────────────────────────
-app.get('(.*)', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // ── Start ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚗 ParkEase API running on http://localhost:${PORT}`);
-  console.log(`   Frontend served at http://localhost:${PORT}`);
+  console.log(`   Frontend path: ${frontendPath}`);
 });
