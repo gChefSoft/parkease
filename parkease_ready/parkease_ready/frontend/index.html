@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParkEase – Smart Parking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Chart.js for admin charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --blue-dark: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --orange: #ea580c;
+    --orange-light: #ffedd5;
+    --purple: #9333ea;
+    --purple-light: #f3e8ff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+    --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.05);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-lg: 16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    line-height: 1.5;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+  a { text-decoration: none; color: inherit; }
+
+  /* ── NAVIGATION ── */
+  #nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
+    color: var(--gray-900); cursor: pointer;
+  }
+  .nav-logo svg { color: var(--blue); }
+  .nav-links { display: flex; align-items: center; gap: 6px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; color: var(--gray-600);
+    cursor: pointer; transition: all .15s;
+    background: none; border: none;
+  }
+  .nav-link:hover { color: var(--gray-900); background: var(--gray-100); }
+  .nav-link.active { color: var(--blue); background: var(--blue-light); }
+  .nav-user {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border-left: 1px solid var(--gray-200);
+    margin-left: 6px;
+    font-size: 14px; color: var(--gray-700);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; border: none; transition: all .15s;
+  }
+  .btn-primary { background: var(--blue); color: var(--white); }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-outline { background: var(--white); color: var(--gray-700); border: 1.5px solid var(--gray-300); }
+  .btn-outline:hover { background: var(--gray-50); border-color: var(--gray-400); }
+  .btn-ghost { background: transparent; color: var(--gray-600); }
+  .btn-ghost:hover { background: var(--gray-100); }
+  .btn-danger { background: var(--red); color: var(--white); }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-success { background: var(--green); color: var(--white); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-lg { padding: 13px 28px; font-size: 16px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .card-header { padding: 20px 24px 0; }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--gray-500); }
+  .card-content { padding: 20px 24px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CONTAINERS ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .page-wrap { padding: 36px 0; min-height: calc(100vh - 64px); }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  label { font-size: 13px; font-weight: 500; color: var(--gray-700); }
+  input, select, textarea {
+    width: 100%; padding: 9px 13px;
+    border: 1.5px solid var(--gray-300); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    background: var(--white); color: var(--gray-900);
+    transition: border-color .15s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+  textarea { resize: vertical; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+  .badge-orange { background: var(--orange-light); color: var(--orange); }
+
+  /* ── GRID HELPERS ── */
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+  @media(max-width:900px){ .grid-4,.grid-3,.grid-2 { grid-template-columns:1fr; } }
+  @media(max-width:700px){ .grid-2{grid-template-columns:1fr;} }
+
+  /* ── STAT CARD ── */
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-label { font-size: 13px; color: var(--gray-500); margin-bottom: 4px; }
+  .stat-value { font-size: 28px; font-weight: 700; font-family: 'Syne', sans-serif; }
+  .stat-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── TOAST ── */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 10px; z-index: 9999;
+  }
+  .toast {
+    background: var(--gray-900); color: var(--white);
+    padding: 13px 18px; border-radius: var(--radius);
+    font-size: 14px; box-shadow: var(--shadow-lg);
+    animation: slideIn .25s ease;
+    display: flex; align-items: center; gap: 10px;
+    max-width: 320px;
+  }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: 24px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); padding: 28px;
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    transform: scale(.95); transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+  .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .modal-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ── HOME PAGE ── */
+  .hero {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .hero-inner {
+    max-width: 1200px; margin: 0 auto; padding: 80px 24px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800;
+    color: var(--gray-900); line-height: 1.15; margin-bottom: 20px;
+  }
+  .hero p { font-size: 1.1rem; color: var(--gray-600); max-width: 560px; margin: 0 auto 32px; }
+  .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .feature-grid { max-width: 1200px; margin: 0 auto; padding: 60px 24px 0; }
+  .feature-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 32px 24px; text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .2s;
+  }
+  .feature-card:hover { box-shadow: var(--shadow-md); }
+  .feature-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .feature-card h3 { font-size: 16px; margin-bottom: 8px; }
+  .feature-card p { font-size: 14px; color: var(--gray-500); }
+  .pricing-section {
+    max-width: 1200px; margin: 0 auto; padding: 60px 24px;
+  }
+  .pricing-section h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; }
+  .price-card {
+    border: 2px solid var(--gray-200); border-radius: var(--radius-lg);
+    padding: 32px 24px; text-align: center;
+    transition: border-color .2s;
+  }
+  .price-card:hover { border-color: var(--blue); }
+  .price-amount {
+    font-size: 2.5rem; font-weight: 800; margin: 12px 0 4px;
+    font-family: 'Syne', sans-serif;
+  }
+  .cta-section {
+    max-width: 1200px; margin: 0 auto; padding: 0 24px 80px;
+    text-align: center;
+  }
+  .cta-section h2 { font-size: 2rem; margin-bottom: 24px; }
+
+  /* ── AUTH PAGES ── */
+  .auth-wrap {
+    min-height: calc(100vh - 64px);
+    background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 24px;
+  }
+  .auth-box { width: 100%; max-width: 440px; }
+  .auth-logo {
+    text-align: center; margin-bottom: 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .auth-logo h1 { font-size: 2rem; }
+  .auth-logo p { color: var(--gray-500); font-size: 14px; }
+  .demo-box {
+    background: var(--blue-light); border-radius: var(--radius-sm);
+    padding: 12px 16px; margin-top: 16px;
+  }
+  .demo-box p { font-size: 12px; color: var(--gray-700); }
+
+  /* ── PARKING MAP ── */
+  .parking-map-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    overflow-x: auto;
+  }
+  .parking-slot {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all .15s;
+    min-width: 50px;
+    gap: 2px;
+  }
+  .parking-slot.available { background: #dcfce7; border-color: #86efac; color: #15803d; }
+  .parking-slot.available:hover { background: #bbf7d0; border-color: #4ade80; transform: scale(1.05); }
+  .parking-slot.occupied { background: #fee2e2; border-color: #fca5a5; color: #991b1b; cursor: not-allowed; }
+  .parking-slot.maintenance { background: #fef9c3; border-color: #fde047; color: #854d0e; cursor: not-allowed; }
+  .parking-slot.dimmed { opacity: .35; }
+  .slot-num { font-size: 8px; }
+  .slot-type { font-size: 8px; font-weight: 400; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; background: var(--gray-100); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px; width: fit-content; }
+  .tab-btn {
+    padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; background: transparent; color: var(--gray-600);
+    transition: all .15s;
+  }
+  .tab-btn.active { background: var(--white); color: var(--gray-900); box-shadow: var(--shadow-sm); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+  td { padding: 13px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gray-50); }
+
+  /* ── ADMIN SIDEBAR ── */
+  #admin-layout { display: flex; min-height: calc(100vh - 64px); }
+  .admin-sidebar {
+    width: 240px; background: var(--white);
+    border-right: 1px solid var(--gray-200);
+    padding: 24px 12px; flex-shrink: 0;
+  }
+  .sidebar-section { margin-bottom: 24px; }
+  .sidebar-label { font-size: 11px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: .08em; padding: 0 12px; margin-bottom: 6px; }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; color: var(--gray-600);
+    cursor: pointer; transition: all .15s;
+    border: none; background: none; width: 100%;
+  }
+  .sidebar-link:hover { background: var(--gray-100); color: var(--gray-900); }
+  .sidebar-link.active { background: var(--blue-light); color: var(--blue); }
+  .admin-main { flex: 1; padding: 36px 32px; overflow-x: hidden; }
+
+  /* ── ABOUT PAGE ── */
+  .about-wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
+
+  /* ── CONTACT PAGE ── */
+  .contact-wrap { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+
+  /* ── INFO CARD ── */
+  .info-box {
+    background: var(--blue-light); border: 1px solid #93c5fd;
+    border-radius: var(--radius); padding: 14px 16px;
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 13px;
+  }
+  .info-box.success-box { background: var(--green-light); border-color: #86efac; }
+
+  /* ── SWITCH ── */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+  .switch {
+    position: relative; width: 44px; height: 24px;
+    background: var(--gray-300); border-radius: 12px;
+    cursor: pointer; transition: background .2s; flex-shrink: 0;
+    border: none;
+  }
+  .switch.on { background: var(--blue); }
+  .switch::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--white); top: 3px; left: 3px;
+    transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch.on::after { left: 23px; }
+
+  /* ── ICON SVGs (inline for common icons) ── */
+  svg { display: inline-block; vertical-align: middle; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-500); }
+  .empty-state h3 { font-size: 16px; color: var(--gray-700); margin-bottom: 8px; }
+
+  /* ── SEPARATOR ── */
+  .sep { border: none; border-top: 1px solid var(--gray-200); margin: 20px 0; }
+
+  /* ── TIME COUNTER ── */
+  .time-badge { background: #dcfce7; color: #15803d; border-radius: var(--radius-sm); padding: 8px 12px; font-weight: 700; font-family: 'Syne', sans-serif; letter-spacing: .02em; }
+
+  /* ── CHART CANVAS ── */
+  .chart-wrap { position: relative; height: 260px; }
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="navigate('home')">
+      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2">
+        <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3"/>
+        <rect x="9" y="11" width="14" height="10" rx="2"/>
+        <circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+      </svg>
+      ParkEase
+    </div>
+    <div class="nav-links" id="nav-links"></div>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ========================= PAGES ========================= -->
+
+<!-- HOME -->
+<div id="page-home" class="page">
+  <div class="hero">
+    <div class="hero-inner">
+      <h1>Smart Parking<br>Made Simple</h1>
+      <p>Find, book, and pay for parking spots in real-time. No more circling around looking for a spot!</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary btn-lg" onclick="navigate('signup')">Get Started</button>
+        <button class="btn btn-outline btn-lg" onclick="navigate('login')">View Parking Map</button>
+      </div>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="grid-3">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#dbeafe">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <h3>Real-Time Availability</h3>
+        <p>See available parking spots in real-time on our interactive map</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#dcfce7">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>Quick Booking</h3>
+        <p>Reserve your spot in seconds and get instant confirmation</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#f3e8ff">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        </div>
+        <h3>Cashless Payment</h3>
+        <p>Pay securely with GCash, credit card, or other digital methods</p>
+      </div>
+    </div>
+  </div>
+  <div class="pricing-section">
+    <h2>Transparent Pricing</h2>
+    <div class="grid-3">
+      <div class="price-card">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="1.5"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/></svg>
+        <h3 style="margin-top:12px">2-Wheel Vehicles</h3>
+        <div class="price-amount" style="color:#2563eb">₱20</div>
+        <div style="color:var(--gray-500);font-size:14px">per hour</div>
+      </div>
+      <div class="price-card">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <h3 style="margin-top:12px">4-Wheel Vehicles</h3>
+        <div class="price-amount" style="color:#16a34a">₱50</div>
+        <div style="color:var(--gray-500);font-size:14px">per hour</div>
+      </div>
+      <div class="price-card">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="1.5"><path d="M1 3h15v13H1zM16 8h4l3 3v5H16V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="15.5" cy="18.5" r="2.5"/><circle cx="20.5" cy="18.5" r="2.5"/></svg>
+        <h3 style="margin-top:12px">6-Wheel Vehicles</h3>
+        <div class="price-amount" style="color:#9333ea">₱80</div>
+        <div style="color:var(--gray-500);font-size:14px">per hour</div>
+      </div>
+    </div>
+  </div>
+  <div class="cta-section">
+    <h2>Ready to park smarter?</h2>
+    <button class="btn btn-primary btn-lg" onclick="navigate('signup')">Create Free Account</button>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div id="page-about" class="page">
+  <div class="about-wrap">
+    <h1 style="font-size:2.2rem;text-align:center;margin-bottom:40px">About ParkEase</h1>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-content">
+        <p style="color:var(--gray-700);line-height:1.8;margin-bottom:12px">
+          ParkEase is a modern parking management system designed to make parking hassle-free for both customers and facility operators. Our platform provides real-time parking availability, instant booking, and secure payment processing.
+        </p>
+        <p style="color:var(--gray-700);line-height:1.8">
+          We believe that finding parking shouldn't be stressful. That's why we've built a smart solution that helps you locate, reserve, and pay for parking spots with just a few taps on your device.
+        </p>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" style="display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Our Mission
+          </div>
+        </div>
+        <div class="card-content"><p style="color:var(--gray-700);font-size:14px">To revolutionize urban parking through innovative technology, making it accessible, convenient, and efficient for everyone.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" style="display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Our Vision
+          </div>
+        </div>
+        <div class="card-content"><p style="color:var(--gray-700);font-size:14px">To become the leading smart parking solution, reducing traffic congestion and creating a seamless parking experience in cities worldwide.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" style="display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Customer First
+          </div>
+        </div>
+        <div class="card-content"><p style="color:var(--gray-700);font-size:14px">We prioritize user experience and continuously improve our platform based on customer feedback and emerging needs.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" style="display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ea580c" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Security & Trust
+          </div>
+        </div>
+        <div class="card-content"><p style="color:var(--gray-700);font-size:14px">Your data and payments are protected with industry-leading security measures to ensure a safe and trustworthy experience.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Why Choose ParkEase?</div></div>
+      <div class="card-content">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+          <li style="display:flex;gap:10px;color:var(--gray-700);font-size:14px"><span style="color:var(--blue);font-weight:700">•</span>Real-time parking availability with live updates</li>
+          <li style="display:flex;gap:10px;color:var(--gray-700);font-size:14px"><span style="color:var(--blue);font-weight:700">•</span>Support for all vehicle types (motorcycles, cars, trucks)</li>
+          <li style="display:flex;gap:10px;color:var(--gray-700);font-size:14px"><span style="color:var(--blue);font-weight:700">•</span>Flexible payment options including GCash and credit cards</li>
+          <li style="display:flex;gap:10px;color:var(--gray-700);font-size:14px"><span style="color:var(--blue);font-weight:700">•</span>24/7 customer support for any issues or concerns</li>
+          <li style="display:flex;gap:10px;color:var(--gray-700);font-size:14px"><span style="color:var(--blue);font-weight:700">•</span>Transparent pricing with no hidden fees</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div id="page-contact" class="page">
+  <div class="contact-wrap">
+    <h1 style="font-size:2.2rem;text-align:center;margin-bottom:40px">Contact Us</h1>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Send us a message</div></div>
+        <div class="card-content">
+          <div class="form-group"><label>Name</label><input id="contact-name" placeholder="Your name" required></div>
+          <div class="form-group"><label>Email</label><input id="contact-email" type="email" placeholder="you@example.com" required></div>
+          <div class="form-group"><label>Subject</label><input id="contact-subject" placeholder="How can we help?" required></div>
+          <div class="form-group"><label>Message</label><textarea id="contact-msg" rows="5" placeholder="Your message..." required></textarea></div>
+          <button class="btn btn-primary btn-full" onclick="submitContact()">Send Message</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card"><div class="card-content">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div class="stat-icon" style="background:#dbeafe">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div><h3 style="font-size:15px;margin-bottom:4px">Email</h3><p style="color:var(--gray-500);font-size:13px">support@parkease.com<br>info@parkease.com</p></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="card-content">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div class="stat-icon" style="background:#dcfce7">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.82 19.79 19.79 0 01.0 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.28-1.28a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            </div>
+            <div><h3 style="font-size:15px;margin-bottom:4px">Phone</h3><p style="color:var(--gray-500);font-size:13px">+63 912 345 6789<br>+63 917 654 3210</p></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="card-content">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div class="stat-icon" style="background:#f3e8ff">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div><h3 style="font-size:15px;margin-bottom:4px">Office</h3><p style="color:var(--gray-500);font-size:13px">123 Main Street, Business District<br>Manila, Philippines 1000</p></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="card-content">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div class="stat-icon" style="background:#ffedd5">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#ea580c" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div><h3 style="font-size:15px;margin-bottom:4px">Business Hours</h3><p style="color:var(--gray-500);font-size:13px">Mon – Fri: 8:00 AM – 6:00 PM<br>Sat: 9:00 AM – 3:00 PM<br>Sun: Closed</p></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="page-login" class="page">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+        <h1>ParkEase</h1>
+        <p>Log in to manage your parking</p>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Welcome Back</div><div class="card-desc">Enter your credentials to access your account</div></div>
+        <div class="card-content">
+          <div class="form-group"><label>Email</label><input id="login-email" type="email" placeholder="you@example.com"></div>
+          <div class="form-group"><label>Password</label><input id="login-pw" type="password" placeholder="••••••••"></div>
+          <button class="btn btn-primary btn-full" onclick="doLogin()">Log In</button>
+          <hr class="sep">
+          <p style="text-align:center;font-size:13px;color:var(--gray-500)">Don't have an account? <a onclick="navigate('signup')" style="color:var(--blue);cursor:pointer">Sign up</a></p>
+          <div class="demo-box">
+            <p><strong>Demo Accounts:</strong></p>
+            <p>Admin: admin@parkease.com / Admin@1234</p>
+            <p>Or register a new account above</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div id="page-signup" class="page">
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+        <h1>ParkEase</h1>
+        <p>Sign up to start parking smarter</p>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Create Account</div><div class="card-desc">Fill in your details to get started</div></div>
+        <div class="card-content">
+          <div class="form-group"><label>Full Name</label><input id="signup-name" placeholder="John Doe"></div>
+          <div class="form-group"><label>Email</label><input id="signup-email" type="email" placeholder="you@example.com"></div>
+          <div class="form-group"><label>Password</label><input id="signup-pw" type="password" placeholder="••••••••"></div>
+          <div class="form-group"><label>Contact Number</label><input id="signup-contact" type="tel" placeholder="+63 912 345 6789"></div>
+          <div class="form-group">
+            <label>Vehicle Type</label>
+            <select id="signup-vehicle">
+              <option value="2-wheel">2-Wheel (Motorcycle)</option>
+              <option value="4-wheel" selected>4-Wheel (Car)</option>
+              <option value="6-wheel">6-Wheel (Truck)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Plate Number</label><input id="signup-plate" placeholder="ABC-1234"></div>
+          <button class="btn btn-primary btn-full" onclick="doSignUp()">Create Account</button>
+          <hr class="sep">
+          <p style="text-align:center;font-size:13px;color:var(--gray-500)">Already have an account? <a onclick="navigate('login')" style="color:var(--blue);cursor:pointer">Log in</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER DASHBOARD -->
+<div id="page-dashboard" class="page">
+  <div class="container page-wrap">
+    <h1 style="font-size:1.8rem;margin-bottom:6px">Parking Dashboard</h1>
+    <p style="color:var(--gray-500);margin-bottom:28px">Select a parking slot to book</p>
+    <div class="grid-3" style="margin-bottom:28px">
+      <div class="stat-card"><div><div class="stat-label">Available Slots</div><div class="stat-value" id="stat-available" style="color:var(--green)">0</div></div><div class="stat-icon" style="background:#dcfce7"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+      <div class="stat-card"><div><div class="stat-label">Occupied Slots</div><div class="stat-value" id="stat-occupied" style="color:var(--red)">0</div></div><div class="stat-icon" style="background:#fee2e2"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+      <div class="stat-card"><div><div class="stat-label">Total Slots</div><div class="stat-value" id="stat-total" style="color:var(--blue)">0</div></div><div class="stat-icon" style="background:#dbeafe"><svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Select Vehicle Type</div></div>
+      <div class="card-content" style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" id="filter-all" onclick="setFilter(null)">All Vehicles</button>
+        <button class="btn btn-outline btn-sm" id="filter-2" onclick="setFilter('2-wheel')">2-Wheel (₱20/hr)</button>
+        <button class="btn btn-outline btn-sm" id="filter-4" onclick="setFilter('4-wheel')">4-Wheel (₱50/hr)</button>
+        <button class="btn btn-outline btn-sm" id="filter-6" onclick="setFilter('6-wheel')">6-Wheel (₱80/hr)</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div class="card-title">Parking Lot Map</div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;background:#dcfce7;border:2px solid #86efac;border-radius:3px"></div><span style="font-size:12px;color:var(--gray-500)">Available</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;background:#fee2e2;border:2px solid #fca5a5;border-radius:3px"></div><span style="font-size:12px;color:var(--gray-500)">Occupied</span></div>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="parking-map-grid" id="parking-map"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MY PARKING -->
+<div id="page-my-parking" class="page">
+  <div class="container page-wrap">
+    <h1 style="font-size:1.8rem;margin-bottom:6px">My Parking</h1>
+    <p style="color:var(--gray-500);margin-bottom:28px">View your active and past parking sessions</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('mp','active',this)">Active Parking</button>
+      <button class="tab-btn" onclick="switchTab('mp','history',this)">History</button>
+    </div>
+    <div class="tab-content active" id="mp-tab-active" ></div>
+    <div class="tab-content" id="mp-tab-history"></div>
+  </div>
+</div>
+
+<!-- REPORT ISSUE -->
+<div id="page-report" class="page">
+  <div class="container page-wrap" style="max-width:780px">
+    <h1 style="font-size:1.8rem;margin-bottom:6px">Report an Issue</h1>
+    <p style="color:var(--gray-500);margin-bottom:28px">Let us know if you're experiencing any problems</p>
+    <div id="report-form-wrap">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Submit a Report</div><div class="card-desc">Fill out the form and we'll address your concern ASAP</div></div>
+        <div class="card-content">
+          <div class="form-group">
+            <label>Select Booking (Optional)</label>
+            <select id="report-booking"><option value="">Choose a booking or leave empty for general issues</option></select>
+          </div>
+          <div class="form-group">
+            <label>Issue Type</label>
+            <select id="report-type">
+              <option value="">Select issue type</option>
+              <option value="wrong-time">Wrong Time / Duration</option>
+              <option value="payment-issue">Payment Issue</option>
+              <option value="slot-occupied">Slot Already Occupied</option>
+              <option value="wrong-slot">Wrong Slot Assigned</option>
+              <option value="technical">Technical Problem</option>
+              <option value="other">Other Concerns</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Description</label><textarea id="report-desc" rows="6" placeholder="Please describe the issue in detail..."></textarea></div>
+          <div class="info-box" style="margin-bottom:20px">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div style="font-size:13px">
+              <strong>Important:</strong> We typically respond within 24 hours. For urgent matters, contact our hotline: +63 912 345 6789. Keep your parking code handy for reference.
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="submitReport()">Submit Report</button>
+        </div>
+      </div>
+    </div>
+    <div id="report-success-wrap" style="display:none">
+      <div class="card"><div class="card-content">
+        <div style="text-align:center;padding:40px 0">
+          <div class="stat-icon" style="background:#dcfce7;width:64px;height:64px;margin:0 auto 20px">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h2 style="font-size:1.5rem;margin-bottom:10px">Report Submitted!</h2>
+          <p style="color:var(--gray-500);margin-bottom:24px">Thank you for reporting. Our team will review it and get back to you soon.</p>
+          <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px 24px;margin-bottom:24px;display:inline-block">
+            <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">Reference Number</div>
+            <div id="report-ref" style="font-size:1.4rem;font-weight:700;color:var(--blue);font-family:'Syne',sans-serif"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;max-width:280px;margin:0 auto">
+            <button class="btn btn-outline btn-full" onclick="resetReport()">Submit Another Report</button>
+            <button class="btn btn-primary btn-full" onclick="navigate('my-parking')">View My Parking</button>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LAYOUT -->
+<div id="page-admin" class="page">
+  <div id="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Overview</div>
+        <button class="sidebar-link active" id="sb-dashboard" onclick="adminNav('admin-dashboard',this)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+        <button class="sidebar-link" id="sb-map" onclick="adminNav('admin-parking-map',this)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Parking Map
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Management</div>
+        <button class="sidebar-link" id="sb-income" onclick="adminNav('admin-income',this)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Income Analytics
+        </button>
+        <button class="sidebar-link" id="sb-users" onclick="adminNav('admin-users',this)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          User Management
+        </button>
+        <button class="sidebar-link" id="sb-slots" onclick="adminNav('admin-slots',this)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          Slot Management
+        </button>
+        <button class="sidebar-link" id="sb-settings" onclick="adminNav('admin-settings',this)">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings
+        </button>
+      </div>
+    </aside>
+    <main class="admin-main">
+      <!-- ADMIN DASHBOARD -->
+      <div id="admin-dashboard" class="admin-section">
+        <h1 style="font-size:1.8rem;margin-bottom:6px">Admin Dashboard</h1>
+        <p style="color:var(--gray-500);margin-bottom:28px">Overview of parking lot operations</p>
+        <div class="grid-4" style="margin-bottom:24px">
+          <div class="stat-card"><div><div class="stat-label">Available Slots</div><div class="stat-value" id="a-avail" style="color:var(--green)">0</div></div><div class="stat-icon" style="background:#dcfce7"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+          <div class="stat-card"><div><div class="stat-label">Occupied Slots</div><div class="stat-value" id="a-occup" style="color:var(--red)">0</div></div><div class="stat-icon" style="background:#fee2e2"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+          <div class="stat-card"><div><div class="stat-label">Total Income</div><div class="stat-value" id="a-income" style="color:var(--blue);font-size:22px">₱0</div></div><div class="stat-icon" style="background:#dbeafe"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div>
+          <div class="stat-card"><div><div class="stat-label">Total Users</div><div class="stat-value" id="a-users" style="color:var(--purple)">0</div></div><div class="stat-icon" style="background:#f3e8ff"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div></div>
+        </div>
+        <div class="grid-3" style="margin-bottom:24px">
+          <div class="stat-card"><div><div class="stat-label">2-Wheel Parked</div><div class="stat-value" id="a-2w" style="color:var(--blue)">0</div><div style="font-size:12px;color:var(--gray-400)">currently parked</div></div></div>
+          <div class="stat-card"><div><div class="stat-label">4-Wheel Parked</div><div class="stat-value" id="a-4w" style="color:var(--green)">0</div><div style="font-size:12px;color:var(--gray-400)">currently parked</div></div></div>
+          <div class="stat-card"><div><div class="stat-label">6-Wheel Parked</div><div class="stat-value" id="a-6w" style="color:var(--orange)">0</div><div style="font-size:12px;color:var(--gray-400)">currently parked</div></div></div>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card"><div class="card-header"><div class="card-title">Weekly Income</div></div><div class="card-content"><div class="chart-wrap"><canvas id="chart-weekly"></canvas></div></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">Vehicle Distribution</div></div><div class="card-content"><div class="chart-wrap"><canvas id="chart-pie"></canvas></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Quick Actions</div></div>
+          <div class="card-content" style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-outline" onclick="adminNav('admin-parking-map',document.getElementById('sb-map'))">View Parking Map</button>
+            <button class="btn btn-outline" onclick="adminNav('admin-income',document.getElementById('sb-income'))">Income Analytics</button>
+            <button class="btn btn-outline" onclick="adminNav('admin-users',document.getElementById('sb-users'))">Manage Users</button>
+            <button class="btn btn-outline" onclick="adminNav('admin-settings',document.getElementById('sb-settings'))">Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PARKING MAP -->
+      <div id="admin-parking-map" class="admin-section" style="display:none">
+        <h1 style="font-size:1.8rem;margin-bottom:6px">Parking Map Control</h1>
+        <p style="color:var(--gray-500);margin-bottom:28px">Real-time view of all parking slots</p>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+            <div class="card-title">Live Parking Map</div>
+            <div style="display:flex;gap:12px">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;background:#dcfce7;border:2px solid #86efac;border-radius:3px"></div><span style="font-size:12px;color:var(--gray-500)">Available</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;background:#fee2e2;border:2px solid #fca5a5;border-radius:3px"></div><span style="font-size:12px;color:var(--gray-500)">Occupied</span></div>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="parking-map-grid" id="admin-parking-map-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN INCOME -->
+      <div id="admin-income" class="admin-section" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+          <div><h1 style="font-size:1.8rem;margin-bottom:6px">Income Analytics</h1><p style="color:var(--gray-500)">Track and analyze parking revenue</p></div>
+          <button class="btn btn-primary" onclick="toast('Income report exported successfully','success')">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Report
+          </button>
+        </div>
+        <div class="grid-4" style="margin-bottom:24px">
+          <div class="stat-card"><div><div class="stat-label">Today's Income</div><div class="stat-value" id="income-today" style="color:var(--blue);font-size:20px">₱0</div></div><div class="stat-icon" style="background:#dbeafe"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div>
+          <div class="stat-card"><div><div class="stat-label">This Week</div><div class="stat-value" id="income-week" style="color:var(--green);font-size:20px">₱0</div></div><div class="stat-icon" style="background:#dcfce7"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div></div>
+          <div class="stat-card"><div><div class="stat-label">This Month</div><div class="stat-value" id="income-month" style="color:var(--purple);font-size:20px">₱0</div></div><div class="stat-icon" style="background:#f3e8ff"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div></div>
+          <div class="stat-card"><div><div class="stat-label">This Year</div><div class="stat-value" id="income-year" style="color:var(--orange);font-size:20px">₱0</div></div><div class="stat-icon" style="background:#ffedd5"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ea580c" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card"><div class="card-header"><div class="card-title">Weekly Income by Vehicle Type</div></div><div class="card-content"><div class="chart-wrap"><canvas id="chart-income-weekly"></canvas></div></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">Monthly Income Trend</div></div><div class="card-content"><div class="chart-wrap"><canvas id="chart-income-monthly"></canvas></div></div></div>
+        </div>
+        <div class="card"><div class="card-header"><div class="card-title">Yearly Income Overview</div></div><div class="card-content"><div class="chart-wrap"><canvas id="chart-income-yearly"></canvas></div></div></div>
+      </div>
+
+      <!-- ADMIN USER MANAGEMENT -->
+      <div id="admin-users" class="admin-section" style="display:none">
+        <h1 style="font-size:1.8rem;margin-bottom:6px">User Management</h1>
+        <p style="color:var(--gray-500);margin-bottom:28px">Manage and monitor all registered users</p>
+        <div class="grid-4" style="margin-bottom:24px">
+          <div class="stat-card"><div><div class="stat-label">Total Users</div><div class="stat-value" id="um-total" style="color:var(--blue)">0</div></div></div>
+          <div class="stat-card"><div><div class="stat-label">Admin Users</div><div class="stat-value" id="um-admin" style="color:var(--red)">0</div></div></div>
+          <div class="stat-card"><div><div class="stat-label">Active Users</div><div class="stat-value" id="um-active" style="color:var(--green)">0</div></div></div>
+          <div class="stat-card"><div><div class="stat-label">2-Wheel Users</div><div class="stat-value" id="um-2w" style="color:var(--purple)">0</div></div></div>
+          <div class="stat-card"><div><div class="stat-label">4-Wheel Users</div><div class="stat-value" id="um-4w" style="color:var(--orange)">0</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+            <div class="card-title">All Users</div>
+            <div style="position:relative">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="user-search" placeholder="Search users..." style="padding-left:34px;width:220px" oninput="renderUserTable()">
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="table-wrap"><table>
+              <thead><tr><th>Name</th><th>Email</th><th>Contact</th><th>Vehicle</th><th>Plate</th><th>Role</th><th>Actions</th></tr></thead>
+              <tbody id="user-table-body"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN SLOT MANAGEMENT -->
+      <div id="admin-slots" class="admin-section" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+          <div><h1 style="font-size:1.8rem;margin-bottom:6px">Slot Management</h1><p style="color:var(--gray-500)">Add, remove, and configure parking slots</p></div>
+          <button class="btn btn-primary" onclick="openAddSlotModal()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add New Slot
+          </button>
+        </div>
+        <div class="grid-3" style="margin-bottom:24px">
+          <div class="card"><div class="card-header"><div class="card-title">2-Wheel Slots</div></div><div class="card-content" id="sm-2w"></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">4-Wheel Slots</div></div><div class="card-content" id="sm-4w"></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">6-Wheel Slots</div></div><div class="card-content" id="sm-6w"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title" id="slot-list-title">All Parking Slots</div></div>
+          <div class="card-content"><div class="grid-3" id="slot-grid"></div></div>
+        </div>
+      </div>
+
+      <!-- ADMIN SETTINGS -->
+      <div id="admin-settings" class="admin-section" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+          <div><h1 style="font-size:1.8rem;margin-bottom:6px">System Settings</h1><p style="color:var(--gray-500)">Configure parking system preferences</p></div>
+          <button class="btn btn-primary" onclick="saveSettings()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Changes
+          </button>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('st','pricing',this)">Pricing</button>
+          <button class="tab-btn" onclick="switchTab('st','time',this)">Time Settings</button>
+          <button class="tab-btn" onclick="switchTab('st','system',this)">System</button>
+        </div>
+        <div class="tab-content active" id="st-tab-pricing">
+          <div class="card"><div class="card-header"><div class="card-title">Pricing Configuration</div><div class="card-desc">Set parking rates for different vehicle types</div></div>
+          <div class="card-content">
+            <div class="form-group"><label>2-Wheel Vehicle Rate (per hour)</label><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">₱</span><input type="number" id="price-2w" value="20" min="1" style="max-width:160px"></div></div>
+            <div class="form-group"><label>4-Wheel Vehicle Rate (per hour)</label><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">₱</span><input type="number" id="price-4w" value="50" min="1" style="max-width:160px"></div></div>
+            <div class="form-group"><label>6-Wheel Vehicle Rate (per hour)</label><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">₱</span><input type="number" id="price-6w" value="80" min="1" style="max-width:160px"></div></div>
+          </div></div>
+        </div>
+        <div class="tab-content" id="st-tab-time">
+          <div class="card"><div class="card-header"><div class="card-title">Time Settings</div><div class="card-desc">Configure parking time limits and restrictions</div></div>
+          <div class="card-content">
+            <div class="form-group"><label>Maximum Parking Duration (hours)</label><input type="number" id="time-limit" value="24" min="1" max="72" style="max-width:160px"></div>
+            <div class="form-group"><label>System Mode</label><select id="system-mode" style="max-width:240px"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+          </div></div>
+        </div>
+        <div class="tab-content" id="st-tab-system">
+          <div class="card"><div class="card-header"><div class="card-title">System Controls</div><div class="card-desc">Manage system-wide settings and features</div></div>
+          <div class="card-content">
+            <div class="switch-row"><div><div style="font-weight:500;font-size:14px">Maintenance Mode</div><div style="font-size:12px;color:var(--gray-500)">Disable bookings during maintenance</div></div><button class="switch" id="sw-maintenance" onclick="toggleSwitch('sw-maintenance')"></button></div>
+            <div class="switch-row"><div><div style="font-weight:500;font-size:14px">Auto-Extend Time</div><div style="font-size:12px;color:var(--gray-500)">Automatically extend booking when time runs low</div></div><button class="switch" id="sw-autoextend" onclick="toggleSwitch('sw-autoextend')"></button></div>
+            <div class="switch-row"><div><div style="font-weight:500;font-size:14px">Email Notifications</div><div style="font-size:12px;color:var(--gray-500)">Send email alerts for bookings and reports</div></div><button class="switch on" id="sw-email" onclick="toggleSwitch('sw-email')"></button></div>
+          </div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- NOT FOUND -->
+<div id="page-notfound" class="page">
+  <div style="text-align:center;padding:100px 24px">
+    <div style="font-size:6rem;font-family:'Syne',sans-serif;font-weight:800;color:var(--gray-200)">404</div>
+    <h2 style="font-size:1.5rem;margin-bottom:8px">Page Not Found</h2>
+    <p style="color:var(--gray-500);margin-bottom:24px">The page you're looking for doesn't exist.</p>
+    <button class="btn btn-primary" onclick="navigate('home')">Go Home</button>
+  </div>
+</div>
+
+<script>
+// ========================= CONFIG =========================
+const API = ''; // Same-origin: backend serves frontend on /api/*
+// If running frontend separately (e.g. live-server on :3000, backend on :3001):
+// const API = 'http://localhost:3001';
+
+// ========================= API HELPERS =========================
+function getToken() { return localStorage.getItem('parkease_token'); }
+function setToken(t) { localStorage.setItem('parkease_token', t); }
+function clearToken() { localStorage.removeItem('parkease_token'); }
+
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const token = getToken();
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// ========================= PRICES =========================
+const PRICES = { '2-wheel': 20, '4-wheel': 50, '6-wheel': 80 };
+const PAYMENT_METHODS = ['GCash', 'Credit/Debit Card', 'Cash'];
+
+// ========================= STATE =========================
+let currentUser = null;
+let currentPage = 'home';
+let currentAdminSection = 'admin-dashboard';
+let vehicleFilter = null;
+let timerInterval = null;
+let parkingSlots = [];
+let myBookings = [];
+
+// Booking flow state
+let bookingSlot = null;
+let bookingStep = 'details';
+let bookingDuration = 2;
+let bookingPayment = 'GCash';
+let bookingCode = '';
+
+// ========================= INIT =========================
+(async function init() {
+  const token = getToken();
+  if (token) {
+    try {
+      const user = await apiFetch('/api/auth/me');
+      currentUser = user;
+    } catch (e) {
+      clearToken();
+    }
+  }
+  navigate('home');
+})();
+
+// ========================= ROUTING =========================
+function navigate(page) {
+  const adminSections = ['admin-dashboard','admin-parking-map','admin-income','admin-users','admin-slots','admin-settings'];
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  if (adminSections.includes(page)) {
+    document.getElementById('page-admin').classList.add('active');
+    adminNav(page, document.getElementById('sb-' + page.replace('admin-', '')));
+    currentPage = 'admin';
+  } else {
+    const el = document.getElementById('page-' + page);
+    if (el) { el.classList.add('active'); currentPage = page; }
+    else { document.getElementById('page-notfound').classList.add('active'); currentPage = 'notfound'; }
+  }
+
+  renderNav();
+  if (page === 'dashboard') initDashboard();
+  if (page === 'my-parking') initMyParking();
+  if (page === 'report') initReport();
+  if (page === 'admin' || adminSections.includes(page)) initAdmin();
+  window.scrollTo(0, 0);
+}
+
+function adminNav(section, btn) {
+  document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+  const el = document.getElementById(section);
+  if (el) el.style.display = '';
+  currentAdminSection = section;
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (section === 'admin-dashboard') initAdminDashboard();
+  if (section === 'admin-income') initIncomeCharts();
+  if (section === 'admin-users') loadAndRenderUsers();
+  if (section === 'admin-slots') loadAndRenderSlots();
+  if (section === 'admin-parking-map') renderAdminMap();
+}
+
+// ========================= NAV =========================
+function renderNav() {
+  const nav = document.getElementById('nav-links');
+  if (!currentUser) {
+    nav.innerHTML = `
+      <button class="nav-link ${currentPage==='home'?'active':''}" onclick="navigate('home')">Home</button>
+      <button class="nav-link ${currentPage==='about'?'active':''}" onclick="navigate('about')">About</button>
+      <button class="nav-link ${currentPage==='contact'?'active':''}" onclick="navigate('contact')">Contact</button>
+      <button class="btn btn-outline btn-sm" onclick="navigate('login')">Login</button>
+      <button class="btn btn-primary btn-sm" onclick="navigate('signup')">Sign Up</button>`;
+  } else if (currentUser.role === 'admin') {
+    nav.innerHTML = `
+      <button class="nav-link ${currentPage==='admin'?'active':''}" onclick="navigate('admin')">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <div class="nav-user">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        ${currentUser.name} <span class="badge badge-blue" style="font-size:10px">Admin</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Logout</button>`;
+  } else {
+    nav.innerHTML = `
+      <button class="nav-link ${currentPage==='dashboard'?'active':''}" onclick="navigate('dashboard')">Dashboard</button>
+      <button class="nav-link ${currentPage==='my-parking'?'active':''}" onclick="navigate('my-parking')">My Parking</button>
+      <button class="nav-link ${currentPage==='report'?'active':''}" onclick="navigate('report')">Report</button>
+      <button class="nav-link ${currentPage==='contact'?'active':''}" onclick="navigate('contact')">Contact</button>
+      <div class="nav-user">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        ${currentUser.name}
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Logout</button>`;
+  }
+}
+
+// ========================= AUTH =========================
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  if (!email || !pw) { toast('Please enter your email and password', 'error'); return; }
+  try {
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password: pw })
+    });
+    setToken(data.token);
+    currentUser = data.user;
+    toast(`Welcome back, ${data.user.name}!`, 'success');
+    navigate(data.user.role === 'admin' ? 'admin' : 'dashboard');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function doSignUp() {
+  const name     = document.getElementById('signup-name').value.trim();
+  const email    = document.getElementById('signup-email').value.trim();
+  const pw       = document.getElementById('signup-pw').value;
+  const contact  = document.getElementById('signup-contact').value.trim();
+  const vehicle  = document.getElementById('signup-vehicle').value;
+  const plate    = document.getElementById('signup-plate').value.trim();
+  if (!name || !email || !pw) { toast('Name, email, and password are required', 'error'); return; }
+  try {
+    const data = await apiFetch('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password: pw, contactNumber: contact, vehicleType: vehicle, plateNumber: plate })
+    });
+    setToken(data.token);
+    currentUser = data.user;
+    toast('Account created! Welcome to ParkEase 🎉', 'success');
+    navigate('dashboard');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function doLogout() {
+  clearToken();
+  currentUser = null;
+  parkingSlots = [];
+  myBookings = [];
+  navigate('home');
+  toast('Logged out successfully');
+}
+
+// ========================= DASHBOARD =========================
+async function initDashboard() {
+  if (!currentUser) { navigate('login'); return; }
+  try {
+    parkingSlots = await apiFetch('/api/slots');
+    renderDashboardStats();
+    renderParkingMap();
+  } catch (e) {
+    toast('Failed to load slots: ' + e.message, 'error');
+  }
+}
+
+function renderDashboardStats() {
+  const avail = parkingSlots.filter(s => s.status === 'available').length;
+  const occ   = parkingSlots.filter(s => s.status === 'occupied').length;
+  document.getElementById('stat-available').textContent = avail;
+  document.getElementById('stat-occupied').textContent  = occ;
+  document.getElementById('stat-total').textContent     = parkingSlots.length;
+}
+
+function setFilter(type) {
+  vehicleFilter = type;
+  ['all','2','4','6'].forEach(k => {
+    const btn = document.getElementById('filter-' + k);
+    if (btn) btn.className = 'btn btn-outline btn-sm';
+  });
+  const activeKey = type ? type.replace('-wheel','') : 'all';
+  const activeBtn = document.getElementById('filter-' + activeKey);
+  if (activeBtn) activeBtn.className = 'btn btn-primary btn-sm';
+  renderParkingMap();
+}
+
+function renderParkingMap() {
+  const map = document.getElementById('parking-map');
+  if (!map) return;
+  map.innerHTML = '';
+  const slots = vehicleFilter ? parkingSlots.filter(s => s.type === vehicleFilter) : parkingSlots;
+  slots.forEach(slot => {
+    const el = document.createElement('div');
+    el.className = `parking-slot ${slot.status}`;
+    el.innerHTML = `<div class="slot-num">${slot.slotNumber}</div><div class="slot-type">${slot.type.replace('-wheel','W')}</div>`;
+    if (slot.status === 'available') {
+      el.onclick = () => openBookingModal(slot);
+    }
+    map.appendChild(el);
+  });
+}
+
+// ========================= BOOKING MODAL =========================
+function openBookingModal(slot) {
+  bookingSlot = slot;
+  bookingStep = 'details';
+  bookingDuration = 2;
+  bookingPayment = 'GCash';
+  renderBookingStep();
+  openModal();
+}
+
+function renderBookingStep() {
+  const slot = bookingSlot;
+  if (!slot) return;
+  const price = slot.price || PRICES[slot.type];
+
+  if (bookingStep === 'details') {
+    document.getElementById('modal-content').innerHTML = `
+      <div class="modal-title">Book Parking Slot</div>
+      <div class="modal-desc">Configure your parking session</div>
+      <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="color:var(--gray-500);font-size:13px">Slot</span>
+          <strong>${slot.slotNumber}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="color:var(--gray-500);font-size:13px">Type</span>
+          <span class="badge badge-blue">${slot.type}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--gray-500);font-size:13px">Rate</span>
+          <strong style="color:var(--blue)">₱${price}/hr</strong>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Duration (hours)</label>
+        <select id="book-duration" onchange="bookingDuration=parseInt(this.value);document.getElementById('book-total').textContent='₱'+(${price}*parseInt(this.value))">
+          ${[1,2,3,4,6,8,12,24].map(h=>`<option value="${h}" ${h===2?'selected':''}>${h} hour${h>1?'s':''}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select id="book-payment" onchange="bookingPayment=this.value">
+          ${PAYMENT_METHODS.map(m=>`<option value="${m}">${m}</option>`).join('')}
+        </select>
+      </div>
+      <div style="background:var(--blue-light);border-radius:var(--radius);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="font-size:14px;font-weight:600">Estimated Total</span>
+        <span id="book-total" style="font-size:20px;font-weight:800;color:var(--blue)">₱${price*bookingDuration}</span>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmBooking()">Confirm Booking</button>
+      </div>`;
+  }
+
+  if (bookingStep === 'success') {
+    document.getElementById('modal-content').innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div class="stat-icon" style="background:#dcfce7;width:64px;height:64px;margin:0 auto 16px">
+          <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="modal-title">Booking Confirmed!</div>
+        <div class="modal-desc">Your parking slot is reserved</div>
+        <div style="background:var(--gray-50);border-radius:var(--radius);padding:16px;margin:16px 0;text-align:left">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--gray-500);font-size:13px">Slot</span><strong>${bookingSlot.slotNumber}</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--gray-500);font-size:13px">Duration</span><strong>${bookingDuration} hr${bookingDuration>1?'s':''}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-500);font-size:13px">Amount</span><strong style="color:var(--blue)">₱${(slot.price||PRICES[slot.type])*bookingDuration}</strong></div>
+        </div>
+        <div class="modal-footer" style="justify-content:center;gap:10px">
+          <button class="btn btn-outline" onclick="closeModal()">Close</button>
+          <button class="btn btn-primary" onclick="closeModal();navigate('my-parking')">View My Parking</button>
+        </div>
+      </div>`;
+  }
+}
+
+async function confirmBooking() {
+  try {
+    const dur = parseInt(document.getElementById('book-duration').value || bookingDuration);
+    const pay = document.getElementById('book-payment').value || bookingPayment;
+    await apiFetch('/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify({
+        slotId: bookingSlot.id,
+        duration: dur,
+        paymentMethod: pay,
+        vehiclePlate: currentUser.plateNumber
+      })
+    });
+    bookingStep = 'success';
+    bookingDuration = dur;
+    bookingPayment = pay;
+    // Update local slot status
+    const s = parkingSlots.find(x => x.id === bookingSlot.id);
+    if (s) s.status = 'occupied';
+    renderParkingMap();
+    renderDashboardStats();
+    renderBookingStep();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ========================= MY PARKING =========================
+async function initMyParking() {
+  if (!currentUser) { navigate('login'); return; }
+  try {
+    myBookings = await apiFetch('/api/bookings/my');
+    renderMyParking();
+  } catch (e) {
+    toast('Failed to load bookings: ' + e.message, 'error');
+  }
+}
+
+function renderMyParking() {
+  const active    = myBookings.filter(b => b.status === 'active');
+  const history   = myBookings.filter(b => b.status !== 'active');
+  const activeEl  = document.getElementById('mp-tab-active');
+  const historyEl = document.getElementById('mp-tab-history');
+  if (!activeEl) return;
+
+  if (active.length === 0) {
+    activeEl.innerHTML = `<div class="empty-state"><h3>No active parking sessions</h3><p>Book a slot from the dashboard</p><button class="btn btn-primary" style="margin-top:16px" onclick="navigate('dashboard')">Find Parking</button></div>`;
+  } else {
+    activeEl.innerHTML = active.map(b => `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-content">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+            <div>
+              <div style="font-size:20px;font-weight:800;color:var(--blue);font-family:'Syne',sans-serif">${b.slotNumber}</div>
+              <div style="font-size:13px;color:var(--gray-500);margin-top:4px">Started ${new Date(b.startTime).toLocaleString()}</div>
+              <div style="font-size:13px;color:var(--gray-500)">Payment: ${b.paymentMethod}</div>
+            </div>
+            <div style="text-align:right">
+              <span class="badge badge-blue" style="margin-bottom:8px">Active</span>
+              <div style="font-size:13px;color:var(--gray-500)">₱${b.totalPrice || '—'}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+            <button class="btn btn-success btn-sm" onclick="endBooking(${b.id})">Check Out</button>
+            <button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  if (history.length === 0) {
+    historyEl.innerHTML = `<div class="empty-state"><h3>No parking history yet</h3><p>Completed sessions will appear here</p></div>`;
+  } else {
+    historyEl.innerHTML = `
+      <div class="card"><div class="card-content">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Slot</th><th>Date</th><th>Duration</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+          <tbody>${history.map(b => `
+            <tr>
+              <td style="font-weight:700">${b.slotNumber}</td>
+              <td>${new Date(b.createdAt).toLocaleDateString()}</td>
+              <td>${b.duration ? b.duration.toFixed(1)+'h' : '—'}</td>
+              <td style="font-weight:700;color:var(--blue)">₱${b.totalPrice ? parseFloat(b.totalPrice).toFixed(2) : '—'}</td>
+              <td>${b.paymentMethod || '—'}</td>
+              <td><span class="badge ${b.status==='completed'?'badge-green':'badge-gray'}">${b.status}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div></div>`;
+  }
+}
+
+async function endBooking(id) {
+  try {
+    const res = await apiFetch(`/api/bookings/${id}/end`, { method: 'PUT' });
+    toast(`Checked out! Total: ₱${parseFloat(res.totalPrice).toFixed(2)}`, 'success');
+    await initMyParking();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function cancelBooking(id) {
+  try {
+    await apiFetch(`/api/bookings/${id}/cancel`, { method: 'PUT' });
+    toast('Booking cancelled', 'success');
+    await initMyParking();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ========================= REPORT =========================
+async function initReport() {
+  if (!currentUser) { navigate('login'); return; }
+  try {
+    const bookings = await apiFetch('/api/bookings/my');
+    const sel = document.getElementById('report-booking');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Choose a booking or leave empty</option>' +
+      bookings.filter(b=>b.status==='active').map(b =>
+        `<option value="${b.id}">Slot ${b.slotNumber} — Active</option>`
+      ).join('');
+  } catch (e) {}
+}
+
+async function submitReport() {
+  const type = document.getElementById('report-type').value;
+  const desc = document.getElementById('report-desc').value.trim();
+  const booking = document.getElementById('report-booking').value;
+  if (!type || !desc) { toast('Please fill in the issue type and description', 'error'); return; }
+  // Send as contact message
+  try {
+    await apiFetch('/api/contact', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: currentUser.name, email: currentUser.email,
+        subject: `Report: ${type}${booking ? ' (Booking #'+booking+')' : ''}`,
+        message: desc
+      })
+    });
+    const ref = 'RPT-' + Math.random().toString(36).substring(2,8).toUpperCase();
+    document.getElementById('report-form-wrap').style.display = 'none';
+    document.getElementById('report-success-wrap').style.display = '';
+    document.getElementById('report-ref').textContent = ref;
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function resetReport() {
+  document.getElementById('report-form-wrap').style.display = '';
+  document.getElementById('report-success-wrap').style.display = 'none';
+  document.getElementById('report-type').value = '';
+  document.getElementById('report-desc').value = '';
+}
+
+// ========================= CONTACT =========================
+async function submitContact() {
+  const name    = document.getElementById('contact-name').value.trim();
+  const email   = document.getElementById('contact-email').value.trim();
+  const subject = document.getElementById('contact-subject').value.trim();
+  const message = document.getElementById('contact-msg').value.trim();
+  if (!name || !email || !message) { toast('Please fill in all required fields', 'error'); return; }
+  try {
+    await apiFetch('/api/contact', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, subject, message })
+    });
+    toast('Message sent! We\'ll get back to you soon.', 'success');
+    ['contact-name','contact-email','contact-subject','contact-msg'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ========================= ADMIN =========================
+async function initAdmin() {
+  if (!currentUser || currentUser.role !== 'admin') { navigate('login'); return; }
+  try {
+    parkingSlots = await apiFetch('/api/slots');
+  } catch (e) {}
+}
+
+async function initAdminDashboard() {
+  try {
+    const [stats, slotStats] = await Promise.all([
+      apiFetch('/api/bookings/admin/stats'),
+      apiFetch('/api/slots/stats')
+    ]);
+
+    // Slot stats
+    let totalAvail = 0, totalOcc = 0;
+    let occ2w = 0, occ4w = 0, occ6w = 0;
+    Object.entries(slotStats).forEach(([type, s]) => {
+      totalAvail += s.available;
+      totalOcc   += s.occupied;
+      if (type === '2-wheel') occ2w = s.occupied;
+      if (type === '4-wheel') occ4w = s.occupied;
+      if (type === '6-wheel') occ6w = s.occupied;
+    });
+
+    document.getElementById('a-avail').textContent  = totalAvail;
+    document.getElementById('a-occup').textContent  = totalOcc;
+    document.getElementById('a-income').textContent = '₱' + parseFloat(stats.totalRevenue || 0).toLocaleString();
+    document.getElementById('a-users').textContent  = stats.totalUsers;
+    document.getElementById('a-2w').textContent = occ2w;
+    document.getElementById('a-4w').textContent = occ4w;
+    document.getElementById('a-6w').textContent = occ6w;
+
+    // Store stats globally so Income Analytics tab can use them
+    window._adminStats = stats;
+
+    // Update income stat cards immediately
+    const fmt = v => '₱' + parseFloat(v || 0).toLocaleString();
+    if (document.getElementById('income-today')) document.getElementById('income-today').textContent = fmt(stats.todayRevenue);
+    if (document.getElementById('income-week'))  document.getElementById('income-week').textContent  = fmt(stats.weekRevenue);
+    if (document.getElementById('income-month')) document.getElementById('income-month').textContent = fmt(stats.monthRevenue);
+    if (document.getElementById('income-year'))  document.getElementById('income-year').textContent  = fmt(stats.yearRevenue);
+
+    initAdminDashboardCharts(stats, slotStats);
+  } catch (e) {
+    toast('Failed to load dashboard: ' + e.message, 'error');
+  }
+}
+
+function initAdminDashboardCharts(stats, slotStats) {
+  // Weekly income bar
+  const wCtx = document.getElementById('chart-weekly');
+  if (wCtx && !wCtx._chartInst) {
+    const monthly = (stats && stats.monthly) || [];
+    wCtx._chartInst = new Chart(wCtx, {
+      type: 'bar',
+      data: {
+        labels: monthly.length ? monthly.map(m=>m.month) : ['Jan','Feb','Mar','Apr','May','Jun'],
+        datasets: [{ label:'Revenue (₱)', data: monthly.length ? monthly.map(m=>m.revenue) : [0,0,0,0,0,0], backgroundColor:'#2563eb', borderRadius:6 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+  }
+
+  // Pie chart
+  const pCtx = document.getElementById('chart-pie');
+  if (pCtx && !pCtx._chartInst && slotStats) {
+    const s2 = slotStats['2-wheel'] || {occupied:0};
+    const s4 = slotStats['4-wheel'] || {occupied:0};
+    const s6 = slotStats['6-wheel'] || {occupied:0};
+    pCtx._chartInst = new Chart(pCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['2-Wheel','4-Wheel','6-Wheel'],
+        datasets: [{ data:[s2.occupied, s4.occupied, s6.occupied], backgroundColor:['#2563eb','#16a34a','#9333ea'] }]
+      },
+      options: { responsive:true, maintainAspectRatio:false }
+    });
+  }
+}
+
+// ========================= ADMIN USERS =========================
+async function loadAndRenderUsers() {
+  try {
+    const users = await apiFetch('/api/admin/users');
+    const total = users.length;
+    const admins = users.filter(u=>u.role==='admin').length;
+    const w2 = users.filter(u=>u.vehicleType==='2-wheel').length;
+    const w4 = users.filter(u=>u.vehicleType==='4-wheel').length;
+
+    document.getElementById('um-total').textContent  = total;
+    document.getElementById('um-admin').textContent  = admins;
+    document.getElementById('um-active').textContent = total - admins;
+    document.getElementById('um-2w').textContent     = w2;
+    document.getElementById('um-4w').textContent     = w4;
+
+    window._adminUsers = users;
+    renderUserTable();
+  } catch (e) {
+    toast('Failed to load users: ' + e.message, 'error');
+  }
+}
+
+function renderUserTable() {
+  const users = window._adminUsers || [];
+  const q = (document.getElementById('user-search')?.value || '').toLowerCase();
+  const filtered = q ? users.filter(u =>
+    u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) ||
+    (u.plateNumber||'').toLowerCase().includes(q)
+  ) : users;
+
+  const tbody = document.getElementById('user-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td style="font-weight:600">${u.name}</td>
+      <td>${u.email}</td>
+      <td>${u.contactNumber || '—'}</td>
+      <td><span class="badge badge-gray">${u.vehicleType || '—'}</span></td>
+      <td style="font-family:monospace;font-size:13px">${u.plateNumber || '—'}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-blue':'badge-gray'}">${u.role}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="viewAdminUser(${u.id})">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteAdminUser(${u.id},'${u.name}')">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function deleteAdminUser(id, name) {
+  if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    toast(`User ${name} deleted`, 'success');
+    await loadAndRenderUsers();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function viewAdminUser(id) {
+  const u = (window._adminUsers||[]).find(x=>x.id===id);
+  if (!u) return;
+  let bookingsHtml = '<div style="text-align:center;color:var(--gray-400);padding:16px;font-size:14px">Loading...</div>';
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">User Details</div>
+    <div class="modal-desc">Complete information and parking history</div>
+    <div class="grid-2" style="gap:12px;background:var(--gray-50);border-radius:var(--radius);padding:16px;margin-bottom:20px">
+      <div><div style="font-size:12px;color:var(--gray-500)">Full Name</div><div style="font-weight:700">${u.name}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-500)">Email</div><div style="font-weight:700">${u.email}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-500)">Contact</div><div style="font-weight:700">${u.contactNumber||'—'}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-500)">Vehicle</div><div style="font-weight:700">${u.vehicleType||'—'}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-500)">Plate</div><div style="font-weight:700;font-family:monospace">${u.plateNumber||'—'}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-500)">Role</div><span class="badge ${u.role==='admin'?'badge-blue':'badge-gray'}">${u.role}</span></div>
+    </div>
+    <div id="user-bookings-list"><div style="text-align:center;color:var(--gray-400);padding:16px">Loading history...</div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Close</button></div>`;
+  openModal();
+  // Load bookings
+  try {
+    const allBookings = await apiFetch('/api/bookings?limit=100');
+    const userBookings = allBookings.filter(b => b.userId == id || b.user_id == id);
+    document.getElementById('user-bookings-list').innerHTML = `
+      <div style="border-top:1px solid var(--gray-100);padding-top:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:12px">Parking History (${userBookings.length})</div>
+        ${userBookings.length ? userBookings.map(b=>`
+          <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700">Slot ${b.slotNumber}</div><div style="font-size:12px;color:var(--gray-500)">${new Date(b.createdAt).toLocaleDateString()} · ${b.duration ? b.duration.toFixed(1)+'h' : '?'}</div></div>
+            <div style="text-align:right"><div style="font-weight:700">₱${b.totalPrice ? parseFloat(b.totalPrice).toFixed(0) : '—'}</div><span class="badge ${b.status==='active'?'badge-blue':'badge-gray'}">${b.status}</span></div>
+          </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:20px;font-size:14px">No parking history</div>'}
+      </div>`;
+  } catch(e) {
+    document.getElementById('user-bookings-list').innerHTML = '<div style="color:var(--gray-400);padding:12px;font-size:13px">Could not load history</div>';
+  }
+}
+
+// ========================= ADMIN SLOTS =========================
+async function loadAndRenderSlots() {
+  try {
+    parkingSlots = await apiFetch('/api/slots');
+    renderSlotManagement();
+  } catch (e) {
+    toast('Failed to load slots: ' + e.message, 'error');
+  }
+}
+
+function renderSlotManagement() {
+  ['2-wheel','4-wheel','6-wheel'].forEach(type => {
+    const key = 'sm-' + type.replace('-wheel','w').replace('-','');
+    const total = parkingSlots.filter(s=>s.type===type).length;
+    const avail = parkingSlots.filter(s=>s.type===type&&s.status==='available').length;
+    const price = PRICES[type];
+    const el = document.getElementById(key);
+    if (!el) return;
+    el.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--gray-500)">Total:</span><span style="font-weight:700">${total}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--gray-500)">Available:</span><span style="font-weight:700;color:var(--green)">${avail}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--gray-500)">Price:</span><span style="font-weight:700;color:var(--blue)">₱${price}/hr</span></div>
+      </div>`;
+  });
+
+  const el = document.getElementById('slot-list-title');
+  if (el) el.textContent = `All Parking Slots (${parkingSlots.length})`;
+  const grid = document.getElementById('slot-grid');
+  if (!grid) return;
+  grid.innerHTML = parkingSlots.slice(0, 30).map(s => `
+    <div style="border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow=''">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div><div style="font-weight:700;font-size:16px">${s.slotNumber}</div><div style="font-size:12px;color:var(--gray-500)">${s.type}</div></div>
+        <span class="badge ${s.status==='available'?'badge-green':'badge-red'}">${s.status}</span>
+      </div>
+      <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">₱${s.price}/hr</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSlot(${s.id},'${s.slotNumber}')">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          Remove
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+async function deleteSlot(id, num) {
+  if (!confirm(`Delete slot ${num}?`)) return;
+  try {
+    await apiFetch(`/api/slots/${id}`, { method: 'DELETE' });
+    toast(`Slot ${num} deleted`, 'success');
+    await loadAndRenderSlots();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function openAddSlotModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">Add New Slot</div>
+    <div class="modal-desc">Configure a new parking slot</div>
+    <div class="form-group"><label>Slot Number</label><input id="ns-num" placeholder="e.g. P081"></div>
+    <div class="form-group"><label>Vehicle Type</label>
+      <select id="ns-type">
+        <option value="2-wheel">2-Wheel (Motorcycle)</option>
+        <option value="4-wheel" selected>4-Wheel (Car)</option>
+        <option value="6-wheel">6-Wheel (Truck)</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Row</label><input id="ns-row" type="number" min="0" value="0" style="max-width:100px"></div>
+    <div class="form-group"><label>Column</label><input id="ns-col" type="number" min="0" value="0" style="max-width:100px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addSlot()">Add Slot</button>
+    </div>`;
+  openModal();
+}
+
+async function addSlot() {
+  const num  = document.getElementById('ns-num').value.trim();
+  const type = document.getElementById('ns-type').value;
+  const row  = parseInt(document.getElementById('ns-row').value || 0);
+  const col  = parseInt(document.getElementById('ns-col').value || 0);
+  if (!num) { toast('Slot number is required', 'error'); return; }
+  try {
+    await apiFetch('/api/slots', {
+      method: 'POST',
+      body: JSON.stringify({ slotNumber: num, type, rowPos: row, colPos: col })
+    });
+    toast(`Slot ${num} added successfully`, 'success');
+    closeModal();
+    await loadAndRenderSlots();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ========================= ADMIN MAP =========================
+function renderAdminMap() {
+  const map = document.getElementById('admin-parking-map-grid');
+  if (!map) return;
+  map.innerHTML = '';
+  parkingSlots.forEach(slot => {
+    const el = document.createElement('div');
+    el.className = `parking-slot ${slot.status}`;
+    el.style.cursor = 'default';
+    el.innerHTML = `<div class="slot-num">${slot.slotNumber}</div><div class="slot-type">${slot.type.replace('-wheel','W')}</div>`;
+    map.appendChild(el);
+  });
+}
+
+// ========================= INCOME CHARTS =========================
+async function initIncomeCharts() {
+  // Load real stats from API if not already loaded
+  let stats = window._adminStats;
+  if (!stats) {
+    try { stats = await apiFetch('/api/bookings/admin/stats'); window._adminStats = stats; } catch(e) { stats = {}; }
+  }
+
+  // Update the 4 stat cards with real data
+  const fmt = v => '₱' + parseFloat(v || 0).toLocaleString();
+  document.getElementById('income-today').textContent = fmt(stats.todayRevenue);
+  document.getElementById('income-week').textContent  = fmt(stats.weekRevenue);
+  document.getElementById('income-month').textContent = fmt(stats.monthRevenue);
+  document.getElementById('income-year').textContent  = fmt(stats.yearRevenue);
+
+  // Monthly data from DB (last 6 months)
+  const monthly = (stats.monthly || []);
+  const monthLabels = monthly.length ? monthly.map(m => m.month) : ['No Data'];
+  const monthRevenue = monthly.length ? monthly.map(m => parseFloat(m.revenue)) : [0];
+
+  // Weekly Income by Vehicle Type — use real monthly breakdown per type from DB or zeros
+  const w = document.getElementById('chart-income-weekly');
+  if (w) { if (w._ci) { w._ci.destroy(); w._ci = null; } }
+  if (w) { w._ci = new Chart(w, { type:'bar', data:{ labels: monthLabels, datasets:[
+    {label:'2-Wheel', data: monthly.map(()=>0), backgroundColor:'#2563eb', borderRadius:4},
+    {label:'4-Wheel', data: monthly.map(()=>0), backgroundColor:'#16a34a', borderRadius:4},
+    {label:'6-Wheel', data: monthly.map(()=>0), backgroundColor:'#9333ea', borderRadius:4}
+  ]}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}} }); }
+
+  // Monthly Income Trend — real data
+  const m = document.getElementById('chart-income-monthly');
+  if (m) { if (m._ci) { m._ci.destroy(); m._ci = null; } }
+  if (m) { m._ci = new Chart(m, { type:'line', data:{ labels: monthLabels, datasets:[{label:'Revenue (₱)', data: monthRevenue, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.1)', fill:true, tension:.4}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}} }); }
+
+  // Yearly Income Overview — spread monthly data across the year
+  const yearData = Array(12).fill(0);
+  const monthMap = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  monthly.forEach(m => { const i = monthMap[m.month]; if (i !== undefined) yearData[i] = parseFloat(m.revenue); });
+  const y = document.getElementById('chart-income-yearly');
+  if (y) { if (y._ci) { y._ci.destroy(); y._ci = null; } }
+  if (y) { y._ci = new Chart(y, { type:'bar', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets:[{label:'Revenue (₱)', data: yearData, backgroundColor:'#2563eb', borderRadius:6}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}} }); }
+}
+
+// ========================= SETTINGS =========================
+function saveSettings() {
+  toast('Settings saved successfully', 'success');
+}
+function toggleSwitch(id) {
+  document.getElementById(id).classList.toggle('on');
+}
+
+// ========================= TABS =========================
+function switchTab(prefix, name, btn) {
+  document.querySelectorAll(`[id^="${prefix}-tab-"]`).forEach(t => t.classList.remove('active'));
+  document.getElementById(`${prefix}-tab-${name}`).classList.add('active');
+  btn.closest('.tabs').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ========================= MODAL =========================
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ========================= TOAST =========================
+function toast(msg, type = '') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  t.innerHTML = `<span>${icon}</span>${msg}`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = 'all .3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+</script>
+
+</body>
+</html>
